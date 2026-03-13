@@ -1338,25 +1338,10 @@ def server_error(e):
 # MAIN
 # ============================================================================
 
-if __name__ == '__main__':
-    print("=" * 60)
-    print("🏥 PNEUMONIA DETECTION SYSTEM v2.0")
-    print("=" * 60)
-    print("\n📋 Default Accounts:")
-    print("\n👨‍⚕️ DOCTOR:")
-    print("   Email: doctor@hospital.com")
-    print("   Password: doctor123")
-    print("\n👤 PATIENT:")
-    print("   Email: patient@email.com")
-    print("   Password: patient123")
-    print("\n🔧 Model Status:")
-    if model.model_loaded:
-        print("   ✅ DenseNet121 loaded successfully")
-    else:
-        print("   ⚠️  Model file not found - using untrained model")
-        print("   📁 Place 'densenet121_pneumonia.pth' in project root")
-    print("\n🌐 Starting server on http://localhost:5000")
-    print("=" * 60)
-    print()
-    
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=5000,
+        allow_unsafe_werkzeug=True
+    )
