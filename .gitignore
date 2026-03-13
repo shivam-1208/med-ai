@@ -4,7 +4,7 @@ __pycache__/
 *.pyc
 .env
 *.pt
-*.pth
+
 *.onnx
 *.engine
 .env
