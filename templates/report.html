@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Report - MedAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #fff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            transform: translateX(-5px);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(102, 126, 234, 0.5);
+            color: #667eea;
+        }
+
+        .btn-outline:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* Report Grid */
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* X-Ray Image Section */
+        .xray-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .xray-image {
+            width: 100%;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .prediction-box {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .prediction-title {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+
+        .prediction-result {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .prediction-result.normal {
+            color: #22c55e;
+        }
+
+        .prediction-result.pneumonia {
+            color: #f59e0b;
+        }
+
+        .confidence-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .confidence-label {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .confidence-value {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .confidence-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .risk-low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .risk-medium {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .risk-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .patient-info {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* Report Section */
+        .report-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+        }
+
+        .report-header {
+            margin-bottom: 30px;
+        }
+
+        .report-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff, #a8b3ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .report-meta {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-pending {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .status-reviewed {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .report-content {
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .report-content h2,
+        .report-content h3 {
+            color: #667eea;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .report-content h2 {
+            font-size: 22px;
+        }
+
+        .report-content h3 {
+            font-size: 18px;
+        }
+
+        .report-content p {
+            margin-bottom: 15px;
+            color: #cbd5e1;
+        }
+
+        .report-content ul,
+        .report-content ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+            color: #cbd5e1;
+        }
+
+        .report-content li {
+            margin-bottom: 8px;
+        }
+
+        .report-content strong {
+            color: #fff;
+        }
+
+        /* Doctor Notes */
+        .doctor-notes {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .doctor-notes-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .doctor-notes-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #22c55e;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn {
+            padding: 15px 20px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            text-decoration: none;
+            color: white;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-3px);
+        }
+
+        .action-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .action-label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        @media (max-width: 1024px) {
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .xray-section {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .report-section {
+                padding: 25px 20px;
+            }
+
+            .report-title {
+                font-size: 24px;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/patient/dashboard" class="back-btn">← Back to Dashboard</a>
+            <div class="header-actions">
+                <a href="/download_report/{{ report.report_id }}" class="btn btn-outline">
+                    <span>📥</span>
+                    <span>Download PDF</span>
+                </a>
+                <a href="/chatbot/{{ report.report_id }}" class="btn btn-primary">
+                    <span>💬</span>
+                    <span>Ask AI</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="report-grid">
+            <!-- X-Ray & Prediction Section -->
+            <div class="xray-section">
+                <img src="data:image/jpeg;base64,{{ report.image_base64 }}" 
+                     alt="Chest X-Ray" 
+                     class="xray-image">
+
+                <div class="prediction-box">
+                    <div class="prediction-title">AI DIAGNOSIS</div>
+                    <div class="prediction-result {% if 'Pneumonia' in report.prediction.prediction %}pneumonia{% else %}normal{% endif %}">
+                        {{ report.prediction.prediction }}
+                    </div>
+                    
+                    <div class="confidence-item">
+                        <span class="confidence-label">Confidence</span>
+                        <span class="confidence-value">{{ "%.1f"|format(report.prediction.confidence * 100) }}%</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: {{ report.prediction.confidence * 100 }}%"></div>
+                    </div>
+
+                    <div style="margin-top: 15px;">
+                        <div class="confidence-item">
+                            <span class="confidence-label">Pneumonia Probability</span>
+                            <span class="confidence-value">{{ "%.1f"|format(report.prediction.pneumonia_probability * 100) }}%</span>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: {{ report.prediction.pneumonia_probability * 100 }}%"></div>
+                        </div>
+                    </div>
+
+                    <span class="risk-badge risk-{{ report.prediction.risk_level.lower() }}">
+                        Risk Level: {{ report.prediction.risk_level }}
+                    </span>
+                </div>
+
+                <div class="patient-info">
+                    <div class="info-row">
+                        <span class="info-label">Patient</span>
+                        <span class="info-value">{{ report.patient_name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Age</span>
+                        <span class="info-value">{{ report.patient_age }} years</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Report ID</span>
+                        <span class="info-value">{{ report.report_id[:8] }}...</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Date</span>
+                        <span class="info-value">{{ report.timestamp[:10] }}</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="/chatbot/{{ report.report_id }}" class="action-btn">
+                        <div class="action-icon">💬</div>
+                        <div class="action-label">Ask Questions</div>
+                    </a>
+                    {% if report.doctor_id %}
+                    <a href="/consultation/{{ report.report_id }}" class="action-btn">
+                        <div class="action-icon">📹</div>
+                        <div class="action-label">Video Call</div>
+                    </a>
+                    {% else %}
+                    <a href="#" class="action-btn">
+                        <div class="action-icon">👨‍⚕️</div>
+                        <div class="action-label">Request Doctor</div>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Medical Report Section -->
+            <div class="report-section">
+                <div class="report-header">
+                    <h1 class="report-title">🫁 Medical Report</h1>
+                    <div class="report-meta">
+                        Generated: {{ report.timestamp[:16].replace('T', ' at ') }}
+                        <span class="status-badge {% if report.status == 'reviewed' %}status-reviewed{% else %}status-pending{% endif %}">
+                            {% if report.status == 'reviewed' %}
+                                ✓ Doctor Reviewed
+                            {% else %}
+                                ⏳ Pending Review
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="report-content">
+                    {% autoescape false %}
+                    {{ report.llm_report | replace('**', '<strong>') | replace('##', '<h2>') | replace('\n', '<br>') }}
+                    {% endautoescape %}
+                </div>
+
+                {% if report.doctor_notes %}
+                <div class="doctor-notes">
+                    <div class="doctor-notes-header">
+                        <span style="font-size: 24px;">👨‍⚕️</span>
+                        <span class="doctor-notes-title">Doctor's Review</span>
+                    </div>
+                    <p style="color: #cbd5e1; line-height: 1.6;">
+                        {{ report.doctor_notes }}
+                    </p>
+                    <div style="margin-top: 15px; font-size: 13px; color: #94a3b8;">
+                        Reviewed at: {{ report.get('reviewed_at', '')[:16].replace('T', ' at ') }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div style="margin-top: 40px; padding: 20px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 12px; text-align: center;">
+                    <p style="color: #fbbf24; font-size: 13px; line-height: 1.6;">
+                        <strong>⚠️ Medical Disclaimer:</strong> This is an AI-generated report for informational purposes only. 
+                        Always consult with qualified healthcare professionals for medical advice, diagnosis, and treatment.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animate confidence bars on load
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.confidence-fill').forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        });
+            const reportId = "{{ report.report_id }}"; // from Flask context
+
+    fetch(`/api/report/${reportId}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("Fetched report:", data);
+        // optionally update DOM elements here if needed
+      })
+      .catch(err => console.error("Error fetching report:", err));
+
+    // Animate confidence bars
+    window.addEventListener('load', () => {
+        document.querySelectorAll('.confidence-fill').forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    });
+
+    
+
+    </script>
+</body>
+</html>

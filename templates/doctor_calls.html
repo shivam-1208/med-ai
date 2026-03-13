@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Video Calls</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #0f172a;
+            min-height: 100vh;
+            color: white;
+            padding: 30px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-back {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .btn-join {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-join:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .calls-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .call-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #10b981;
+            padding: 25px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .call-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #10b981;
+            transform: translateX(5px);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .call-info h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .call-meta {
+            display: flex;
+            gap: 20px;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        
+        .waiting-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .ping {
+            width: 8px;
+            height: 8px;
+            background: #fbbf24;
+            border-radius: 50%;
+            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #64748b;
+        }
+        
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📞 Pending Video Consultations</h1>
+                <p>Patients waiting for your consultation</p>
+            </div>
+            <a href="/doctor/dashboard" class="btn btn-back">← Back to Dashboard</a>
+        </div>
+        
+        <div id="callsList" class="calls-grid">
+            <!-- Calls will be loaded here -->
+        </div>
+    </div>
+    
+    <script>
+        let socket;
+        const DOCTOR_ID = "{{ user.user_id }}";
+        
+        window.onload = function() {
+            initializeSocket();
+            loadActiveCalls();
+            
+            // Refresh every 5 seconds
+            setInterval(loadActiveCalls, 5000);
+        };
+        
+        function initializeSocket() {
+            socket = io();
+            
+            socket.on('connect', () => {
+                socket.emit('join_doctor_room', { doctor_id: DOCTOR_ID });
+            });
+            
+            socket.on('new_call_notification', (data) => {
+                console.log('New call:', data);
+                playNotificationSound();
+                loadActiveCalls();
+            });
+        }
+        
+        async function loadActiveCalls() {
+            try {
+                const response = await fetch('/api/doctor/active-calls');
+                const data = await response.json();
+                
+                const container = document.getElementById('callsList');
+                
+                if (data.calls && data.calls.length > 0) {
+                    container.innerHTML = data.calls.map(call => `
+                        <div class="call-card">
+                            <div class="call-info">
+                                <h3>🩺 ${call.patient_name}, ${call.patient_age}y</h3>
+                                <div class="call-meta">
+                                    <span>📋 ${call.prediction}</span>
+                                    <span>🕐 ${call.timestamp.substring(11, 16)}</span>
+                                </div>
+                                <span class="waiting-badge">
+                                    <span class="ping"></span>
+                                    PATIENT WAITING
+                                </span>
+                            </div>
+                            <a href="/consultation/${call.report_id}" class="btn btn-join">
+                                Join Call →
+                            </a>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">✅</div>
+                            <h2>No Pending Calls</h2>
+                            <p>You'll be notified when a patient requests a consultation</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading calls:', error);
+            }
+        }
+        
+        function playNotificationSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+    </script>
+</body>
+</html>
